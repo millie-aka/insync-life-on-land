@@ -82,19 +82,25 @@ app.layout = html.Div([
         )
     ]),
     html.Hr(),
-    dash.page_container,
-html.Footer(
-    
-        dbc.Row(
-            dbc.Col(
-                html.P("2024 INSynC, LLC All Rights Reserved", className="footer-text", style={'text-align': 'center', 'color': 'white'}),
-                width={'size': 12, 'offset': 3}
-            )
-        ),
-        style={'background-color': '#112434', 'padding': '20px', 'width': '100%'}  # Add background color and padding
-    )
+    dbc.Spinner(
+        dash.page_container,  # Wrap the page container
+        size="lg",
+        color="primary",
+        type="border",
+        fullscreen=True,  # Optional: Make spinner fullscreen for more prominence
+    ),
+    html.Footer(
+        
+            dbc.Row(
+                dbc.Col(
+                    html.P("2024 INSynC, LLC All Rights Reserved", className="footer-text", style={'text-align': 'center', 'color': 'white'}),
+                    width={'size': 12, 'offset': 3}
+                )
+            ),
+            style={'background-color': '#112434', 'padding': '20px', 'width': '100%'}  # Add background color and padding
+        )
 
-])
+    ])
 
 # Callback to update the active link based on the current pathname
 @app.callback(

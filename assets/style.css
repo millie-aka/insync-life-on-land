@@ -188,9 +188,11 @@ header
 }
 
 .tab-label {
+    margin-left: 37%;
+
     padding: 15.5px;
     font-weight: bold;
-    font-size: 16px; /* Example to increase the font size */
+    font-size: 30px; /* Example to increase the font size */
 }
 
 .content {
@@ -224,3 +226,23 @@ header
     margin-right: 50px;
 }
 
+
+/* Ensure all cards have the same size */
+.card {
+    display: flex;
+    flex-direction: column;  /* Makes flex items (card elements) lay out in column direction */
+    justify-content: space-between; /* Distributes space around items along the main axis */
+    height: 100%; /* Full height to fill the parent's dimension */
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allows the card body to expand to fill available space */
+    justify-content: space-between; /* Even spacing within card body */
+}
+
+/* Optional: Set a specific min-height for better uniformity */
+.card {
+    min-height: 400px; /* Adjust based on your typical content height */
+}
