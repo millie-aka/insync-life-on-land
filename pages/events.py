@@ -33,14 +33,14 @@ tabs = dbc.Tabs(
                                 ])
                             ],
                             style={"width": "18rem"},  # Fixed width for consistency
-                            className="m-3"  # Margin for spacing
+                            className="m-3 mb-4 d-flex flex-column"  # Margin for spacing
                         )
                     ) for _, row in chunk.iterrows() if pd.notna(row["Image"])  # Check if image URL is not NaN
                 ],
                 className="justify-content-center"
             ), 
-            label=f"{i+1}", tab_class_name="tab-label"
-        ) for i, chunk in enumerate(chunks)
+            label="The upcoming event", tab_class_name="tab-label"
+        ) for i, chunk in enumerate(chunks[:1])
     ]  
 )
 
@@ -50,7 +50,6 @@ def b64_image(img):
     return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
 
 #app = DashProxy(assets_folder='assets')
-
 layout = html.Div([
     
     
@@ -71,7 +70,7 @@ layout = html.Div([
     dbc.Container([tabs 
         ],
         fluid=True,
-        style={'marginTop': '50px'}  
+        style={'marginTop': '50px', 'marginBottom': '50px'}  
     ),
     html.Div(className="card card-calendar", style={"height": "10%"}, children=[
         html.Div(className="card-body p-3", children=[
@@ -80,4 +79,3 @@ layout = html.Div([
     ]),
     DeferScript(src='assets/full_calendar_deferscript.js')              
 ])
-

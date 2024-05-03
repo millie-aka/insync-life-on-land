@@ -61,13 +61,10 @@ modal = html.Div(
     ]
 )
 
-app.layout = html.Div([
-    modal,
-    dcc.Location(id='url', refresh=False),  # Add dcc.Location component
-    dbc.Row([
+navbar = dbc.Row([
         dbc.Col(
             html.Header([
-                html.A('WildStep', href='#', className='logo'),
+                html.A('WildStep', href='/', className='logo'),
                 html.Ul([
                     html.Li(dcc.Link('Home', href='/', id='home-link', className='navigation-link')),
                     html.Li(dcc.Link('My Trail', href='/my-trails', id='my-trails-link', className='navigation-link')),
@@ -77,13 +74,35 @@ app.layout = html.Div([
             ], className='fixed-top', style={
                 'background-color': '#F9F1E8',  # Light beige background
                 'box-shadow': '0 4px 6px rgba(0,0,0,0.1)',  # Soft shadow for depth
-                'border-bottom': '2px solid #333'  # Dark border for definition
+                'border-bottom': '2px solid #333',  # Dark border for definition
+                'overflow':'hidden'
             })  # Updated style with shadow and border
         )
-    ]),
-    html.Hr(),
-    dash.page_container,
-html.Footer(
+    ])
+
+navbar1 = dbc.NavbarSimple(
+
+    children=[
+
+        dbc.NavItem(dbc.NavLink("Home", href="/", id='home-link', style={"color":"#545646"})),
+        dbc.NavItem(dbc.NavLink("My Trail", href="/my-trails", id='my-trails-link', style={"color":"#545646"})),
+        dbc.NavItem(dbc.NavLink("Explore Species", href="/explore-species", id='explore-species-link', style={"color":"#545646"})),
+        dbc.NavItem(dbc.NavLink("Events", href="/events", id='events-link', style={"color":"#545646"})),
+
+    ],
+
+    brand="WildStep",
+    brand_href="/",
+    brand_style={"color":"#545646", "font-size":"30px", 'font-family': 'georgia','font-weight': 'bold'},
+    color="#F9F1E8",
+    dark=True,
+    fixed="top",
+    expand="md",
+    fluid=True,
+    style={"background-color":"#F9F1E8"}
+)
+
+footer = html.Footer(
     
         dbc.Row(
             dbc.Col(
@@ -94,6 +113,14 @@ html.Footer(
         style={'background-color': '#112434', 'padding': '20px', 'width': '100%'}  # Add background color and padding
     )
 
+
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),  # Add dcc.Location component
+    modal, 
+    navbar,
+    html.Hr(),
+    dash.page_container,
+    footer
 ])
 
 # Callback to update the active link based on the current pathname
@@ -132,6 +159,7 @@ def check_password(n_clicks, password):
         else:
             return True, "Incorrect password entered"  # Keep the modal open if password is incorrect, display error message
     return True, ""  # Keep the modal open if the button hasn't been clicked yet
+
 
 if __name__ == '__main__':
     app.run_server(debug=False, host="0.0.0.0", port=8080)
