@@ -20,10 +20,8 @@ df = pd.read_sql('SELECT * FROM trails', con=connection)
 def load_species_names():
     species_path = 'data/species/'
     species_files = [f.split('.')[0] for f in os.listdir(species_path) if os.path.isfile(os.path.join(species_path, f))]
-    print("debug:", species_files)
     #return [{'label': s.replace('_', ' ').title(), 'value': s} for s in species_files]
     species_options = [{'label': s.replace('_', ' ').title(), 'value': s} for s in species_files]
-    print(species_options)
     return species_options
  
 def b64_image(img):
