@@ -8,12 +8,13 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State, ALL
 from dash.exceptions import PreventUpdate
-
-dash.register_page(__name__, path="/events", title='WildStep Events')
+from datetime import datetime
 
 df_events = pd.read_csv('data/event_data.csv')
 # Group the cards into chunks of 4
 chunks = [df_events.iloc[i:i+4] for i in range(0, df_events.shape[0], 4)]
+
+dash.register_page(__name__, title='WildStep Events')
 
 # Create a list of dbc.Rows, each containing 4 cards
 tabs = dbc.Tabs(
@@ -39,9 +40,35 @@ tabs = dbc.Tabs(
                 ],
                 className="justify-content-center"
             ), 
-            label="The upcoming event", tab_class_name="tab-label"
+            label=f"The upcoming event", tab_class_name="tab-label"
         ) for i, chunk in enumerate(chunks[:1])
     ]  
+)
+
+today = datetime.now().strftime('%Y-%m-%d')
+# filtered_events = df_events[df_events['Date'] == today]
+
+carousel_items = [
+    {
+        'key': str(index),
+        'src': row["Image"],
+        'header': row["Title"],
+        'caption': f"Date: {row['Date']} | Location: {row['Location']}",
+        'img_style': {'opacity':'0.3'},
+        'href': row['URL'],
+        'external_link': True,
+    }
+    for index, row in df_events.iterrows() if pd.notna(row["Image"])
+]
+ 
+# Create the carousel using the new items list.
+carousel = dbc.Carousel(
+    items=carousel_items,
+    controls=True,  # Enable navigation controls.
+    indicators=True,  # Show indicators.
+    interval=4000,  # Time in milliseconds between item cycles.
+    ride='carousel',
+    className="carousel-fade"
 )
 
 def b64_image(img):
@@ -49,33 +76,84 @@ def b64_image(img):
         image = f.read()
     return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
 
-#app = DashProxy(assets_folder='assets')
+app = DashProxy(assets_folder='assets')
 layout = html.Div([
+            dbc.Row([
+                dbc.Col([
+                    html.Div(style={'position': 'relative', 'width': '90%', 'margin-top': '10%', 'margin-left': '5%'}, children=[
+                    html.Img(src=b64_image('assets/events_species.png'), style={'width':'100%', 'height':'auto', 'opacity':'0.3', 'borderRadius':'50px'}),
+                    html.Div("SAVE", style={
+                        'position': 'absolute',
+                        'top': '10%',
+                        'left':'3%',
+                        'color': '#545646',
+                        'font-size': '4em',
+                        'text-align': 'left',
+                        'font-weight':'bold',
+                        'text-shadow': '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                    }),
+                    html.Div("VICTORIAN", style={
+                        'position': 'absolute',
+                        'top': '37%',
+                        'left':'3%',
+                        'color': '#545646',
+                        'font-size': '4em',
+                        'text-align': 'left',
+                        'font-weight':'bold',
+                        'text-shadow': '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                    }),
+                    html.Div("BIODIVERSITY", style={
+                        'position': 'absolute',
+                        'top': '65%',
+                        'left':'3%',
+                        'color': '#545646',
+                        'font-size': '4em',
+                        'text-align': 'left',
+                        'font-weight':'bold',
+                        'text-shadow': '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                    })
+                ])
+                    ], width=7),
+                dbc.Col([
+                    html.P("Include Vcitoria's diverse biodiversity in your weekend plans", style={'margin-top':'12%', 'font-size':'2em', 'color': '#545646', 'padding':'5%', 'text-align':'center', 'font-weight':'bold',}),
+                    html.P("Participate in conservation events or view seasonal wildlife activities around you. Scroll to browse through upcoming events or view the calendar for all events", style={'font-size':'1.3em', 'color': '#545646', 'text-align':'center', 'padding':'5%'}),
+                #     html.Div(children=[
+                #         html.Img(src=b64_image('assets/element3.png'), style={'width': '50%', 'height': 'auto', 'margin-left':'20%', 'margin-top':'5%'}),
+                #         html.P("Did you know the number of endangered species", style={'margin-top': '5%', 'left': '55%', 'font-size':'20px', 'text-color':'#F9F1E8'}),
+                #         # html.P("Discover conservation events around you", className="hover-text", style={'top': '55%', 'left': '55%'})
+                # ], id='left1')
+            ], width=5),
+        ]),
+        dbc.Row([
+                dbc.Col([
+                    html.Div([
+                        html.Img(src=b64_image('assets/element2.png'), style={'height': 'auto', 'width': '200%', 'margin-left':'-5%', 'margin-top':'5%', 'z-index':'-1', 'margin-right':'120%', 'padding':'10%'}),
+                        html.P("Browse through all upcoming conservation and seasonal events in Victoria", style={'margin-top':'20%', 'font-size':'2em', 'color': '#545646','text-align':'center', 'font-weight':'bold',}),
+                    ]) 
+                ], width=4),
+                dbc.Col([
+                    dbc.Container([carousel], fluid=True, style={'padding':'10%'}),
+            ], width=8),
+                
+        ]),
+        
     
     
-    html.Div(className="content", children=[
-        html.Div(
-            className="heading",
-            children=[
-                html.H1("Welcome to the Conservation Events page!", className="text-center mb-5"),
-                html.P("Here you can find upcoming events related to conservation and community engagement.", className="text-center mb-5"),
-                html.P("Discover, Participate, and Make a Difference!", className="text-center mb-5")
-            ]
-        ),
-        html.Img(src=b64_image("assets/EVENT.png"), className='img')
-    ]),
-
-            
-            
-    dbc.Container([tabs 
-        ],
-        fluid=True,
-        style={'marginTop': '50px', 'marginBottom': '50px'}  
-    ),
-    html.Div(className="card card-calendar", style={"height": "10%"}, children=[
+    
+    # dbc.Container([tabs 
+    #     ],
+    #     fluid=True,
+    #     style={'marginTop': '50px', 'marginBottom': '50px'}  
+    # ),
+    html.Div(className="card card-calendar", style={"height": "10%", 'margin':'5%'}, children=[
         html.Div(className="card-body p-3", children=[
             html.Div(id="calendar", **{"data-bs-toggle": "calendar"})
         ])
     ]),
     DeferScript(src='assets/full_calendar_deferscript.js')              
 ])
+
+
+
+# if __name__ == "__main__":
+#     app.run_server()
