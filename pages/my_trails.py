@@ -143,44 +143,59 @@ def fetch_data(model):
 layout = dbc.Container(fluid=True, children=[
 
     dcc.Geolocation(id='geo'),
-    html.Section(className='parallax', children=[
+    html.Section(className='parallax', 
+        children=[
         dbc.Row([
             dbc.Col([
-                    html.H2('Get real time updates on your trail', id='text3',
-                            style={'margin-top': '-3%', 'text-align': 'center', 'margin-right':'100px'}),
-                    dcc.Dropdown(
-                        id='mytrail-search-dropdown',
-                        options=load_trail_names(),
-                        searchable=True,
-                        placeholder="Tell us the trail you're on...",
-                        style={
-                            'width': '70%',  # Use 100% to make it responsive within the column
-                            'margin': '0 auto',  # Keep it centered
-                            'borderRadius': '20px',
-                            'fontFamily': '"Poppins", sans-serif',
-                            'fontSize': '16px',
-                            'margin-top': '40px',
-                            'margin-left': '80px',
-                            'borderWidth': '2px',
-                            'borderColor': '#D9D9D9'
-                        }
-                    ),
-                    ], width=7),
+                html.Img(src=b64_image('assets/all_trails_bg.png'), style={'z-index':'-1', 'opacity':'0.3', 'wdith':'150%', 'height':'auto'}),
+                html.Img(src=b64_image('assets/alert.png'), style={'width':'25%', 'height':'auto', 'margin-left':'5%', 'margin-bottom':'5%'})
+                    # html.H2('Get real time updates on your trail', id='text3',
+                    #         style={'margin-top': '-3%', 'text-align': 'center', 'margin-right':'100px'}),
+                    # dcc.Dropdown(
+                    #     id='mytrail-search-dropdown',
+                    #     options=load_trail_names(),
+                    #     searchable=True,
+                    #     placeholder="Tell us the trail you're on...",
+                    #     style={
+                    #         'width': '70%',  # Use 100% to make it responsive within the column
+                    #         'margin': '0 auto',  # Keep it centered
+                    #         'borderRadius': '20px',
+                    #         'fontFamily': '"Poppins", sans-serif',
+                    #         'fontSize': '16px',
+                    #         'margin-top': '40px',
+                    #         'margin-left': '80px',
+                    #         'borderWidth': '2px',
+                    #         'borderColor': '#D9D9D9'
+                    #     }
+                    # ),
+                    ], width=3),
                 dbc.Col([
                     html.Div([
-                        html.Img(src=b64_image('assets/element1.png'), id = 'alert', style={'width':'50%', 'height':'auto', 'margin-left':'1050px', 'z-index':'-1'}),
-                        html.H2('Be Alert.', id = 'text4',style={'font-size': '3em', 'color': '#F9F1E8', 'margin-bottom': '10px', 'margin-top': '-12%', 'margin-left':'50px', 'text-align':'center'}),
+                        html.P('Find species on your trail', style={'font-size': '3em', 'color': '#47483c', 'margin-left':'20%'}),
+                        # html.H2('Be Alert.', id = 'text4',style={'font-size': '3em', 'color': '#F9F1E8', 'margin-bottom': '10px', 'margin-top': '-12%', 'margin-left':'50px', 'text-align':'center'}),
                         html.P(" "),
-                        html.H4('Keep yourself and your surroundings safe', id = 'text5', style={'margin-top': '20px', 'margin-bottom': '10px', 'color': '#F9F1E8', 'margin-left':'50px', 'text-align':'center'})
+                        html.H4("Get real time updates on species found on your trail. Let's share interesting wildlife we find around Victoria", style={'margin-bottom': '10px', 'color': '#545646', 'text-align':'left', 'margin-left':'15%', 'padding':'5%'}),
+                        html.Img(src=b64_image('assets/element1.png'), id = 'alert', style={'width':'40%', 'height':'auto', 'margin-left':'100%', 'margin-top':'150%', 'z-index':'-1'}),
+                        dcc.Dropdown(
+                            id='mytrail-search-dropdown',
+                            options=load_trail_names(),
+                            searchable=True,
+                            placeholder="Tell us the trail you're on...",
+                            style={
+                                'width': '70%',  # Use 100% to make it responsive within the column
+                                'margin': '0 auto',  # Keep it centered
+                                'borderRadius': '20px',
+                                'fontFamily': '"Poppins", sans-serif',
+                                'fontSize': '16px',
+                                # 'padding': '20%',
+                                'margin-left': '15%',
+                                'borderWidth': '2px',
+                                'borderColor': '#D9D9D9'
+                            }
+                        )
                     ])
-                ], width=5)
-                ]),
-        # html.Img(src='/assets/monutain_01.png', id='m1', style={'z-index': '-1', 'height': '50%'}),
-        # html.Img(src='/assets/trees_02.png', id='t2', style={'z-index': '-1', 'top': '357px', 'height': '60%'}),
-        # html.Img(src='/assets/monutain_02.png', id='m2', style={'z-index': '-1', 'height': '50%'}),
-        # html.Img(src='/assets/trees_01.png', id='t1', style={'z-index': '-1'}),
-        # # html.Img(src='/assets/man.png', id='man'),
-        # html.Img(src='/assets/plants.png', id='plants', style={'z-index': '-1'})
+                ], width=9)
+            ]),
     ]),
     html.Div(id='scroll-trigger', style={'display': 'none'}),
     html.Div(id='mytrail-dummy-input', style={'display': 'none'}),
@@ -276,11 +291,11 @@ layout = dbc.Container(fluid=True, children=[
             dbc.Button("Close", id="close-too-far-modal", className="ms-auto", n_clicks=0)
         )
     ], id="too-far-modal", is_open=False),
-    dcc.Interval(
-        id='interval-component',
-        interval=2*1000,  # in milliseconds, e.g., 5*1000 for 5 seconds
-        n_intervals=0
-    )
+    # dcc.Interval(
+    #     id='interval-component',
+    #     interval=2*1000,  # in milliseconds, e.g., 5*1000 for 5 seconds
+    #     n_intervals=0
+    # )
 ])
 
 
@@ -421,11 +436,10 @@ def handle_upload(contents, local_date, position, position_error):
     Output('myimage-layer', 'children'),
     [Input('upload-image', 'contents'),
      Input('mytrail-search-dropdown', 'value'),
-     Input('geo', 'position'),
-     Input('interval-component', 'n_intervals')],
+     Input('geo', 'position')],
     [State('mytrail-map', 'zoom')]
 )
-def display_image_marker(contents, trail, user_position, n, zoom):
+def display_image_marker(contents, trail, user_position, zoom):
     if not trail:
         return []
 
