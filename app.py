@@ -20,107 +20,83 @@ app = dash.Dash(__name__,
                 use_pages=True,
                 external_stylesheets=external_stylesheets,
                 external_scripts=[
-    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.5.1/gsap.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.5.1/ScrollTrigger.min.js'],
+                    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.5.1/gsap.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.5.1/ScrollTrigger.min.js'],
                 suppress_callback_exceptions=True,
                 prevent_initial_callbacks="initial_duplicate", update_title=None,
                 title='WildStep')
 
 
-from pages import home
-from pages import my_trails
-from pages import explore_species
+from pages import *
+
 
 
 server = app.server
 
 # Define modal content
-modal = html.Div(
-    [
-        dbc.Modal(
-            [
-                dbc.ModalHeader("Password Required", close_button=False),
-                dbc.ModalBody(
-                    [
-                        html.Label("Password:"),
-                        dcc.Input(id="password-input", type="password", autoComplete="off"),
-                        html.Div(id="password-error-message", style={"color": "red"})
-                    ]
-                ),
-                dbc.ModalFooter(
-                    dbc.Button("Submit", id="submit-button", color="primary")
-                ),
-            ],
-            id="modal",
-            is_open=True,  # Open the modal by default
-            centered=True,
-            backdrop="static",  # Disable clicking outside to close
-            keyboard=False, #Disable pressing escape key to close
+# modal = html.Div(
+#     [
+#         dbc.Modal(
+#             [
+#                 dbc.ModalHeader("Password Required", close_button=False),
+#                 dbc.ModalBody(
+#                     [
+#                         html.Label("Password:"),
+#                         dcc.Input(id="password-input", type="password", autoComplete="off"),
+#                         html.Div(id="password-error-message", style={"color": "red"})
+#                     ]
+#                 ),
+#                 dbc.ModalFooter(
+#                     dbc.Button("Submit", id="submit-button", color="primary")
+#                 ),
+#             ],
+#             id="modal",
+#             is_open=True,  # Open the modal by default
+#             centered=True,
+#             backdrop="static",  # Disable clicking outside to close
+#             keyboard=False, #Disable pressing escape key to close
 
-        ),
-    ]
-)
+#         ),
+#     ]
+# )
 
-navbar = dbc.Row([
+app.layout = html.Div([
+    # modal,
+    dcc.Location(id='url', refresh=False),  # Add dcc.Location component
+    dbc.Row([
         dbc.Col(
             html.Header([
-                html.A('WildStep', href='/', className='logo'),
+                html.A('WildStep', href='#', className='logo'),
                 html.Ul([
                     html.Li(dcc.Link('Home', href='/', id='home-link', className='navigation-link')),
                     html.Li(dcc.Link('My Trail', href='/my-trails', id='my-trails-link', className='navigation-link')),
                     html.Li(dcc.Link('Explore Species', href='/explore-species', id='explore-species-link', className='navigation-link')),
                     html.Li(dcc.Link('Events', href='/events', id='events-link', className='navigation-link')),
+                    html.Li(dcc.Link('My Profile', href='/my-profile', id='profile-link', className='navigation-link')),
                 ], className='navigation'),
             ], className='fixed-top', style={
                 'background-color': '#F9F1E8',  # Light beige background
                 'box-shadow': '0 4px 6px rgba(0,0,0,0.1)',  # Soft shadow for depth
                 'border-bottom': '2px solid #333',  # Dark border for definition
-                'overflow':'hidden'
+                'margin-bottom':'200px',
+                'zIndex': 1020,  # Typically enough to stay above other content, adjust if necessary
+                'height': '80px'
             })  # Updated style with shadow and border
         )
-    ])
-
-navbar1 = dbc.NavbarSimple(
-
-    children=[
-
-        dbc.NavItem(dbc.NavLink("Home", href="/", id='home-link', style={"color":"#545646"})),
-        dbc.NavItem(dbc.NavLink("My Trail", href="/my-trails", id='my-trails-link', style={"color":"#545646"})),
-        dbc.NavItem(dbc.NavLink("Explore Species", href="/explore-species", id='explore-species-link', style={"color":"#545646"})),
-        dbc.NavItem(dbc.NavLink("Events", href="/events", id='events-link', style={"color":"#545646"})),
-
-    ],
-
-    brand="WildStep",
-    brand_href="/",
-    brand_style={"color":"#545646", "font-size":"30px", 'font-family': 'georgia','font-weight': 'bold'},
-    color="#F9F1E8",
-    dark=True,
-    fixed="top",
-    expand="md",
-    fluid=True,
-    style={"background-color":"#F9F1E8"}
-)
-
-footer = html.Footer(
-    
-        dbc.Row(
-            dbc.Col(
-                html.P("2024 INSynC, LLC All Rights Reserved", className="footer-text", style={'text-align': 'center', 'color': 'white'}),
-                width={'size': 12, 'offset': 3}
-            )
-        ),
-        style={'background-color': '#112434', 'padding': '20px', 'width': '100%'}  # Add background color and padding
-    )
-
-
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),  # Add dcc.Location component
-    modal, 
-    navbar,
+    ]),
     html.Hr(),
     dash.page_container,
-    footer
+    html.Footer(
+        
+            dbc.Row(
+                dbc.Col(
+                    html.P("2024 INSynC, LLC All Rights Reserved", className="footer-text", style={'text-align': 'center', 'color': 'white'}),
+                    width={'size': 12, 'offset': 3}
+                )
+            ),
+            style={'background-color': '#112434', 'padding': '20px', 'width': '100%'}  # Add background color and padding
+        )
+
 ])
 
 # Callback to update the active link based on the current pathname
@@ -129,7 +105,8 @@ app.layout = html.Div([
      Output('home-link', 'className'),
      Output('my-trails-link', 'className'),
      Output('explore-species-link', 'className'),
-     Output('events-link', 'className')
+     Output('events-link', 'className'),
+     Output('profile-link', 'className')
      ],
     [Input('url', 'pathname')]
 )
@@ -143,24 +120,23 @@ def update_active_link(pathname):
 
 
 # Callback to handle password submission
-@app.callback(
-    [Output("modal", "is_open"),
-    Output("password-error-message", "children")],
-    [Input("submit-button", "n_clicks")],
-    [State("password-input", "value")],
-)
+# @app.callback(
+#     [Output("modal", "is_open"),
+#     Output("password-error-message", "children")],
+#     [Input("submit-button", "n_clicks")],
+#     [State("password-input", "value")],
+# )
 
-def check_password(n_clicks, password):
-    if n_clicks:
-        # Check if the password is correct
-        #if password == "314x~7!ZPGy!":
-        if password == "wildstep":
-            return False, ""  # Close the modal if password is correct
-        else:
-            return True, "Incorrect password entered"  # Keep the modal open if password is incorrect, display error message
-    return True, ""  # Keep the modal open if the button hasn't been clicked yet
-
+# def check_password(n_clicks, password):
+#     if n_clicks:
+#         # Check if the password is correct
+#         #if password == "314x~7!ZPGy!":
+#         if password == "wildstep":
+#             return False, ""  # Close the modal if password is correct
+#         else:
+#             return True, "Incorrect password entered"  # Keep the modal open if password is incorrect, display error message
+#     return True, ""  # Keep the modal open if the button hasn't been clicked yet
 
 if __name__ == '__main__':
-    app.run_server(debug=False, host="0.0.0.0", port=8080)
-    #app.run_server(debug=True)
+    # app.run_server(debug=False, host="0.0.0.0", port=8080)
+    app.run_server(debug=True)
