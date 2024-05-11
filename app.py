@@ -116,7 +116,6 @@ footer = html.Footer(
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),  # Add dcc.Location component
-    modal, 
     navbar,
     html.Hr(),
     dash.page_container,
@@ -162,5 +161,5 @@ def check_password(n_clicks, password):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False, host="0.0.0.0", port=8080)
-    #app.run_server(debug=True)
+    #app.run_server(debug=False, host="0.0.0.0", port=8080)
+    app.run_server(debug=True)

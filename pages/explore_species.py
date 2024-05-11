@@ -22,6 +22,7 @@ def load_species_names():
     species_files = [f.split('.')[0] for f in os.listdir(species_path) if os.path.isfile(os.path.join(species_path, f))]
     #return [{'label': s.replace('_', ' ').title(), 'value': s} for s in species_files]
     species_options = [{'label': s.replace('_', ' ').title(), 'value': s} for s in species_files]
+    #print(species_options)
     return species_options
  
 def b64_image(img):
@@ -77,7 +78,7 @@ def filter_trails(selected_species, difficulty, duration, distance):
     return pd.DataFrame(), True
  
  
-def build_trail_card(trail):
+def build_trail_card(trail, selected_species):
     trail_name = trail['trail_name']
     # image_src = f"data/trail_img/{trail_name}.jpg"  # Ensure this path is correct
     description = trail['trail_desc']
@@ -87,51 +88,70 @@ def build_trail_card(trail):
     dist_mel = trail['trail_dist_mel']
     time_mel = trail['trail_time_mel']
     loop = trail['trail_loop']
+    species = trail['trail_species'].split(", ")
+    selected_species = [s.replace('_', ' ') for s in selected_species]
+
     looped = ''
     if loop == 'one way':
         looped = 'No'
     elif loop == 'closed loop':
         looped = 'Yes'
-       
+
+    trail_card_species = [s for s in selected_species if s in species]    
+    trail_card_species_str = ", ".join(trail_card_species)   
+
     trail_card = dbc.Row([
 
         dbc.Col([
             html.Img(src=b64_image(f"data/trail_img/{trail_name}.jpg"),
                      style={'max-width': '100%', 'height': 'auto', 'max-height': '1000px', 'display': 'block', 'border-radius': '10px'})],width=3),
         dbc.Col([
-            html.P(f'{trail_name}', style={'margin-left': '30px', 'text-align': 'justify', 'font-size':'1em', 'color': '#545646'}),
+            html.P(f'{trail_name}', style={'margin-left': '30px', 'text-align': 'justify', 'font-size':'1.1em', 'color': '#545646', 'font-weight':'bold'}),
             html.P(description, style={'margin-left': '30px', 'text-align': 'justify', 'color':'#545646', 'font-size':'0.9em'})
         ], width=9),
         dbc.Col([
             dbc.Row([
                 dbc.Col([
+
+                    html.I(
+                        className="fas fa-clock", style={'color': '#808080', 'margin-right': '5px', 'margin-top': '20px', 'margin-left': '30px'}),
+                    html.Span(f"Species to spot in this trail: {trail_card_species_str}", style={'color': '#808080', 'font-weight': 'bold'}),
+                    html.Div(""),
+                    # Mountain icon
+
                     html.I(
                         className="fas fa-clock", style={'color': '#808080', 'margin-right': '5px', 'margin-top': '20px', 'margin-left': '30px'}),
                     html.Span(f"How long you'll be hiking for: {duration}hours", style={'color': '#808080'}),
                     html.Div(""),
                     # Mountain icon
+
                     html.I(
                         className="fas fa-mountain", style={'color': '#808080', 'margin-right': '5px', 'margin-left': '30px', 'margin-top': '15px'}),
                     html.Span(f"How steep it is: {elevation_gain}m", style={'color': '#808080'}),
                     html.Div(""),
                     # Route icon
+
                     html.I(
                         className="fas fa-route", style={'color': '#808080', 'margin-right': '5px', 'margin-left': '30px', 'margin-top': '15px'}),
                     html.Span(f" How much distance you're covering: {distance}km", style={'color': '#808080'}),
+
                 ], width=12),
                 dbc.Col([
                     html.I(className="fas fa-solid fa-car",
                            style={'color': '#808080', 'margin-right': '5px',  'margin-left': '30px', 'margin-top': '15px'}),
                     html.Span(f"How long before you should leave from Melbourne: {time_mel}hours", style={'color': '#808080'}),
                     html.Div(""),
+
                     html.I(
                         className="fas fa-map-pin", style={'color': '#808080', 'margin-right': '5px',  'margin-left': '30px', 'margin-top': '15px'}),
                     html.Span(f"How far it is from Melbourne: {dist_mel}km", style={'color': '#808080'}),
                     html.Div(""),
+
                     html.I(
                         className="fas fa-redo", style={'color': '#808080', 'margin-right': '5px',  'margin-left': '30px', 'margin-top': '15px'}),
                     html.Span(f"Will you come back to the same place you parked: {looped}", style={'color': '#808080'}),
                 ], width=12),
+
             ], style={'display': 'flex'}),
         ], width=12)
     ], style={'margin': '15%', 'display': 'flex', 'padding': '30px', 'border': '1.5px solid', 'border-color': '#545646', 'border-radius': '50px', 'box-shadow': '0 2px 4px rgba(0, 0, 0, 0.1)',
@@ -144,17 +164,17 @@ layout = html.Div([
                 style={'width':'30%', 'height':'auto', 'z-index':'-1', 'margin-left':'83%', 'top':'0', 'position':'absolute'}),
    
     dbc.Container(children=[
-        html.H1("Discover Your Next Hiking Adventure", className="text-center", style={"margin-top": "5%"}),
+        html.H1("Discover Your Next Hiking Adventure", className="text-center", style={"margin-top": "5%", 'color':'#545646'}),
         html.P(
             "Embark on a journey tailored just for you! Answer a series of questions about what you're looking for in a hike, "
             "and we'll recommend the best trails that match your preferences.",
-            className="lead", style={"padding": "5%", "font-size": "1.2em", 'text-align':'center'}
+            className="lead", style={"padding": "5%", "font-size": "1.3em", 'text-align':'center', 'color':'#545646'}
         ),
-        dbc.Button("Customize your Trail", id="next-to-species", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}),
+        dbc.Button("Customize your Trail", id="next-to-species", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '5px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}),
     ], id='home-container', style={"margin-top": "5%", 'padding':'5%', 'margin-bottom':'10%'}),
    
     dbc.Container(children=[
-        html.H3("What specie(s) you want to see on your hike?", className='text-center'),
+        html.H3("What specie(s) you want to see on your hike?", className='text-center', style={'color':'#545646'}),
         dcc.Dropdown(
             id='species-search-dropdown',
             options=load_species_names(),
@@ -175,11 +195,12 @@ layout = html.Div([
         ),
         html.Div(id='species-cards-container', style={'margin-right':'5%', 'margin-left':'18%'}),
         dbc.Button("Next: Difficulty Level >", id="next-to-difficulty", className="d-block mx-auto",
-                   style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'5%'})
+                   style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'5%'}),
+        dbc.Progress(color='#545646', label='25%', value=25, style={'width':'50%', 'align-items':'center', 'margin-left':'25%', "background-color": "#d3d3d3", 'height':'5%', 'margin-top':'7%'})
     ], id='species-container', style={"display":"none"}),
    
     dbc.Container(children=[
-        html.H3("How much do you want to challenge yourself?", className='text-center'),
+        html.H3("How much do you want to challenge yourself?", className='text-center', style={'color':'#545646'}),
         dcc.RadioItems(
             options=[
                 {'label': ' Take it easy', 'value': 'easy'},
@@ -189,16 +210,18 @@ layout = html.Div([
             ],
             value='Moderate',
             id='difficulty-radio',
-            style={'margin-left':'35%', 'margin-top':'5%', 'margin-bottom':'5%', "font-size": "1.2em"}
+            labelStyle={"fontSize": "0.85em", 'color':'#716233'},
+            style={'margin-left':'35%', 'margin-top':'5%', 'margin-bottom':'5%', "font-size": "1.2em", 'color':'#545646'}
         ),
         dbc.Row([
             dbc.Col(dbc.Button("< Back: Species", id="back-to-species", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto"),
             dbc.Col(dbc.Button("Next: Duration of Hike >", id="next-to-duration", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto")
-        ], justify="center", className="my-4")
+        ], justify="center", className="my-4"),
+        dbc.Progress(color='#545646', label='50%', value=50, style={'width':'50%', 'align-items':'center', 'margin-left':'25%', "background-color": "#d3d3d3", 'height':'5%', 'margin-top':'7%'})
     ], id='difficulty-container', style={"display":"none"}),
    
     dbc.Container(children=[
-        html.H3("For how long do you want to hike?", className='text-center'),
+        html.H3("For how long do you want to hike?", className='text-center', style={'color':'#545646'}),
         dcc.RadioItems(
             options=[
                 {'label': '  Less than 1 hour', 'value': '1'},
@@ -208,16 +231,18 @@ layout = html.Div([
             ],
             value='1',
             id='duration-radio',
+            labelStyle={"fontSize": "0.85em", 'color':'#716233'},
             style={'margin-left':'35%', 'margin-top':'5%', 'margin-bottom':'5%', "font-size": "1.2em"}
         ),
         dbc.Row([
             dbc.Col(dbc.Button("< Back: Difficulty", id="back-to-difficulty", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto"),
             dbc.Col(dbc.Button("Next: Distance from Melbourne >", id="next-to-dist-mel", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto")
-        ], justify="center", className="my-4")
+        ], justify="center", className="my-4"),
+        dbc.Progress(color='#545646', label='75%', value=75, style={'width':'50%', 'align-items':'center', 'margin-left':'25%', "background-color": "#d3d3d3", 'height':'5%', 'margin-top':'7%'})
     ], id='duration-container', style={"display":"none"}),
        
     dbc.Container(children=[
-        html.H3("How far you are willing to travel", className='text-center'),
+        html.H3("How far you are willing to travel", className='text-center', style={'color':'#545646'}),
         dcc.RadioItems(
             options=[
                 {'label': '  Within 50km', 'value': '50'},
@@ -226,17 +251,19 @@ layout = html.Div([
             ],
             value='50',
             id='distance-radio',
+            labelStyle={"fontSize": "0.85em", 'color':'#716233'},
             style={'margin-left':'35%', 'margin-top':'5%', 'margin-bottom':'5%', "font-size": "1.2em"}
         ),
         dbc.Row([
             dbc.Col(dbc.Button("< Back: Duration", id="back-to-duration", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto"),
             dbc.Col(dbc.Button("Recommend Hikes!", id="finish-quiz", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto")
-        ], justify="center", className="my-4")
+        ], justify="center", className="my-4"),
+        dbc.Progress(color='#545646', label='100%', value=100, style={'width':'50%', 'align-items':'center', 'margin-left':'25%', "background-color": "#d3d3d3", 'height':'5%', 'margin-top':'7%'})
     ], id='distance-container', style={"display":"none"}),
    
     dbc.Container(children=[
         dbc.Button("< Get new recommendations", id="new-recomm", color="primary", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}),
-        html.H3(id='text-result', children="Placeholder", style={'font-size':'1.2em', 'text-align':'left', 'margin-top':'5%', 'margin-bottom':'5%'}),
+        html.H3(id='text-result', children="Loading...", style={'font-size':'1.2em', 'text-align':'left', 'margin-top':'5%', 'margin-bottom':'5%', 'color':'#545646'}),
         html.Div(id='trail-cards')
     ], id='answer-container', style={"display":"none"}),
  
@@ -322,10 +349,13 @@ def display_results(n_clicks, selected_species, selected_difficulty, selected_du
         raise PreventUpdate
  
     filtered_trails, was_relaxed = filter_trails(selected_species, selected_difficulty, selected_duration, selected_distance)
+    #print("debug filtered_trails:", filtered_trails)
     if filtered_trails.empty:
         return [], "Can't find matches for your preferences, retake the quiz & adjust them!"
  
-    cards = [build_trail_card(trail) for index, trail in filtered_trails.iterrows()]
+    
+    
+    cards = [build_trail_card(trail, selected_species) for index, trail in filtered_trails.iterrows()]
     match_message = "Trails based on your preferences" if not was_relaxed else "Can't find matches for your preferences, but we think you should check this out!"
     return cards, match_message
  

@@ -11,4 +11,5 @@ gcloud run deploy --image gcr.io/wild-step/wild_step_app --platform managed --pr
 
 gcloud run deploy --image gcr.io/wild-step/wild_step_app --platform managed --project=wild-step --no-allow-unauthenticated
 
-
+dark: '#545646',
+beige: '#F9F1E8'
