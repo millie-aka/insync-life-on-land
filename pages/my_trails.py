@@ -48,20 +48,34 @@ external_stylesheets = [
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'assets/lifeonland-418914-00a1094d16b6.json'
 
 
-def detect_labels(path):
-    """Detects labels in the file."""
-    from google.cloud import vision
-    client = vision.ImageAnnotatorClient()
-    # content = base64.b64decode(path)
-    image = vision.Image(content=path)
-    response = client.label_detection(image=image)
-    labels = response.label_annotations
-    if response.error.message:
-        raise Exception(
-            "{}\nFor more info on error messages, check: "
-            "https://cloud.google.com/apis/design/errors".format(response.error.message)
-        )
-    return labels
+# def detect_labels(path):
+#     """Detects labels in the file."""
+#     from google.cloud import vision
+#     client = vision.ImageAnnotatorClient()
+#     # content = base64.b64decode(path)
+#     image = vision.Image(content=path)
+#     response = client.label_detection(image=image)
+#     labels = response.label_annotations
+#     if response.error.message:
+#         raise Exception(
+#             "{}\nFor more info on error messages, check: "
+#             "https://cloud.google.com/apis/design/errors".format(response.error.message)
+#         )
+#     return labels
+
+
+def detect_labels(content):
+    import openai
+    openai.api_key = "YOUR_API_KEY"
+    # image_base64 = encode_image_to_base64(
+    # 'path/to/koala_image.jpg'
+    # )
+    response = openai.ChatCompletion.create(model="gpt-4-turbo", 
+                                            messages=[{"role":"user", "content": "What's the species in this image? Is it an endangered or threatened species? Can you provide a description?"}, 
+                                                        {"role":"system", "content": {"type":"image_base64", "image_base64": content}}     
+                                            ])
+    print(response)
+    return response['choices'][0]['message']['content']
 
 
 def get_unique_species(df):
@@ -149,33 +163,14 @@ layout = dbc.Container(fluid=True, children=[
             dbc.Col([
                 html.Img(src=b64_image('assets/all_trails_bg.png'), style={'z-index':'-1', 'opacity':'0.3', 'wdith':'150%', 'height':'auto'}),
                 html.Img(src=b64_image('assets/alert.png'), style={'width':'25%', 'height':'auto', 'margin-left':'5%', 'margin-bottom':'5%'})
-                    # html.H2('Get real time updates on your trail', id='text3',
-                    #         style={'margin-top': '-3%', 'text-align': 'center', 'margin-right':'100px'}),
-                    # dcc.Dropdown(
-                    #     id='mytrail-search-dropdown',
-                    #     options=load_trail_names(),
-                    #     searchable=True,
-                    #     placeholder="Tell us the trail you're on...",
-                    #     style={
-                    #         'width': '70%',  # Use 100% to make it responsive within the column
-                    #         'margin': '0 auto',  # Keep it centered
-                    #         'borderRadius': '20px',
-                    #         'fontFamily': '"Poppins", sans-serif',
-                    #         'fontSize': '16px',
-                    #         'margin-top': '40px',
-                    #         'margin-left': '80px',
-                    #         'borderWidth': '2px',
-                    #         'borderColor': '#D9D9D9'
-                    #     }
-                    # ),
-                    ], width=3),
+                ], width=3),
                 dbc.Col([
                     html.Div([
                         html.P('Find species on your trail', style={'font-size': '3em', 'color': '#47483c', 'margin-left':'20%'}),
                         # html.H2('Be Alert.', id = 'text4',style={'font-size': '3em', 'color': '#F9F1E8', 'margin-bottom': '10px', 'margin-top': '-12%', 'margin-left':'50px', 'text-align':'center'}),
                         html.P(" "),
                         html.H4("Get real time updates on species found on your trail. Let's share interesting wildlife we find around Victoria", style={'margin-bottom': '10px', 'color': '#545646', 'text-align':'left', 'margin-left':'15%', 'padding':'5%'}),
-                        html.Img(src=b64_image('assets/element1.png'), id = 'alert', style={'width':'40%', 'height':'auto', 'margin-left':'100%', 'margin-top':'150%', 'z-index':'-1'}),
+                        # html.Img(src=b64_image('assets/element1.png'), id = 'alert', style={'width':'40%', 'height':'auto', 'margin-left':'100%', 'margin-top':'150%', 'z-index':'-1'}),
                         dcc.Dropdown(
                             id='mytrail-search-dropdown',
                             options=load_trail_names(),
@@ -209,11 +204,30 @@ layout = dbc.Container(fluid=True, children=[
                             html.H4("See what other hikers have found on your trail",
                                     style={'color': '#F9F1E8', 'text-align': 'center'}),
                             html.P("   "),
-                            html.P("Hover over each icon on the map to find the hike start and end points.",
+                            html.P("Hover over each icon on the map to find interesting finds & species.",
                                    style={'color': '#F9F1E8', 'text-align': 'center'}),
                             html.P("   "),
                             # html.P("Please share your location before seeing real-time updates",
                             #        style={'color': '#545646', 'text-align': 'center'}),
+                            html.Div(children=[
+                                html.P("ⓘ Seems like you are too far from trail. If you still want to upload the image, tell us approximately where you found it?", style={'font-size':'0.9em', 'color':'#eae1d8', 'text-align': 'center'}),
+                                dcc.Dropdown(
+                                    id='section-search-dropdown',
+                                    options=['Towards the beginning', 'Somewhere in the middle of the trail', 'Only at the end'],
+                                    placeholder="Select the part of trail...",
+                                    style={
+                                        'width': '80%',  # Use 100% to make it responsive within the column
+                                        'margin': '0 auto',  # Keep it centered
+                                        'borderRadius': '20px',
+                                        'fontFamily': '"Poppins", sans-serif',
+                                        'fontSize': '16px',
+                                        # 'padding': '20%',
+                                        # 'margin-left': '15%',
+                                        'borderWidth': '2px',
+                                        'borderColor': '#D9D9D9'
+                                    }
+                                )
+                            ], style={'display':'none'}, id='too-far-section'),
                             dcc.Loading(
                                 id="loading-upload",
                                 type="default",  # Or any other type you prefer
@@ -230,7 +244,7 @@ layout = dbc.Container(fluid=True, children=[
                                         multiple=True
                                     ),
                                 ]),
-                            dbc.Tooltip("Please share your location & choose your trail to enable uploads.",
+                            dbc.Tooltip("Please share your location/section & choose your trail to enable uploads.",
                                         target="upload-image",  # Match the id of dcc.Upload
                                         id="tooltip-upload",
                                         is_open=False,
@@ -304,16 +318,26 @@ layout = dbc.Container(fluid=True, children=[
      Output('tooltip-upload', 'is_open'),
      Output('tooltip-upload', 'style')],
     [Input('geo', 'position'),
-     Input('mytrail-search-dropdown', 'value')],
+     Input('mytrail-search-dropdown', 'value'),
+     Input('section-search-dropdown', 'value')],
     [State('upload-image', 'style')]
 )
-def update_upload_style_and_tooltip(position, trail_value, style):
+def update_upload_style_and_tooltip(position, trail_value, section_value, style):
     # Check if both the location is shared (position is not None) and a trail is selected (trail_value is not None)
     if position and trail_value:
-        return {'display': 'block', 'width': '100%', 'height': '50px',
+        gpx_path = os.path.join('data/trails', f'{trail_value}.gpx')
+        trail_points = gpx_to_points(gpx_path).coords
+        user_position = (position['lat'], position['lon'])
+        if is_within_distance(user_position, trail_points) or section_value:
+            return {'display': 'block', 'width': '100%', 'height': '50px',
+                    'color': '#545646', 'backgroundColor': '#e8dfd4', 'lineHeight': '50px',
+                    'border': 'none', 'borderRadius': '20px', 'textAlign': 'center', 'pointerEvents': 'auto',
+                    'cursor': 'pointer', 'transition': 'all 0.2s ease-in-out', 'opacity': '1'}, False, {'display': 'none'}
+        elif not section_value:
+            return {'display': 'block', 'width': '100%', 'height': '50px',
                 'color': '#545646', 'backgroundColor': '#e8dfd4', 'lineHeight': '50px',
-                'border': 'none', 'borderRadius': '20px', 'textAlign': 'center', 'pointerEvents': 'auto',
-                'cursor': 'pointer', 'transition': 'all 0.2s ease-in-out', 'opacity': '1'}, False, {'display': 'none'}
+                'border': 'none', 'borderRadius': '20px', 'textAlign': 'center', 'pointerEvents': 'none',
+                'cursor': 'not-allowed', 'transition': 'all 0.2s ease-in-out', 'opacity': '0.6'}, False, {'display': 'block'}
     elif position and not trail_value:
         return {'display': 'block', 'width': '100%', 'height': '50px',
                 'color': '#545646', 'backgroundColor': '#e8dfd4', 'lineHeight': '50px',
@@ -329,6 +353,8 @@ def update_upload_style_and_tooltip(position, trail_value, style):
                 'color': '#545646', 'backgroundColor': '#e8dfd4', 'lineHeight': '50px',
                 'border': 'none', 'borderRadius': '20px', 'textAlign': 'center', 'pointerEvents': 'none',
                 'cursor': 'not-allowed', 'transition': 'all 0.2s ease-in-out', 'opacity': '0.6'}, False, {'display': 'block'}
+
+
 
 
 @callback(
@@ -348,71 +374,116 @@ def toggle_location_error_modal(close_clicks, position_error, is_open):
     return is_open
 
 
+# @callback(
+#     Output('too-far-modal', 'is_open'),
+#     [Input('close-too-far-modal', 'n_clicks'),
+#      Input('geo', 'position'),
+#      Input('mytrail-search-dropdown', 'value')],
+#     [State('too-far-modal', 'is_open')],
+#     prevent_initial_call=True
+# )
+# def handle_too_far_modal(close_clicks, position, selected_trail, is_open):
+#     ctx = dash.callback_context
+#     if not ctx.triggered:
+#         raise PreventUpdate
+#     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+#     if triggered_id == 'close-too-far-modal':
+#         return False
+#     elif triggered_id == 'geo':
+#         if not position or not selected_trail:
+#             return False
+#         gpx_path = os.path.join('data/trails', f'{selected_trail}.gpx')
+#         trail_points = gpx_to_points(gpx_path).coords
+#         user_position = (position['lat'], position['lon'])
+#         if is_within_distance(user_position, trail_points):
+#             return False
+#         else:
+#             return True
+#     return is_open
+
 @callback(
-    Output('too-far-modal', 'is_open'),
-    [Input('close-too-far-modal', 'n_clicks'),
-     Input('geo', 'position'),
+    Output('too-far-section', 'style'),
+    [Input('geo', 'position'),
      Input('mytrail-search-dropdown', 'value')],
-    [State('too-far-modal', 'is_open')],
+    # [State('too-far-modal', 'is_open')],
     prevent_initial_call=True
 )
-def handle_too_far_modal(close_clicks, position, selected_trail, is_open):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
-    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    if triggered_id == 'close-too-far-modal':
-        return False
-    elif triggered_id == 'geo':
-        if not position or not selected_trail:
-            return False
-        gpx_path = os.path.join('data/trails', f'{selected_trail}.gpx')
-        trail_points = gpx_to_points(gpx_path).coords
-        user_position = (position['lat'], position['lon'])
-        if is_within_distance(user_position, trail_points):
-            return False
-        else:
-            return True
-    return is_open
-
-
+def show_upload_options(position, trail_name):
+    if not trail_name:
+        return dash.no_update
+    gpx_path = os.path.join('data/trails', f'{trail_name}.gpx')
+    trail_points = gpx_to_points(gpx_path).coords
+    user_position = (position['lat'], position['lon'])
+    if not is_within_distance(user_position, trail_points):
+        return {'display':'block', 'margin':'10%'}
+    else:
+        return {'display': 'none'}
+        
 @callback(
-    Output('upload-status', 'children'),  # An Output to indicate the upload status
-    [Input('upload-image', 'contents'),  # Contents from the upload component
-     Input('geo', 'local_date')],  # Date from the geolocation component
-    [State('geo', 'position'),  # Position state from geolocation
-     State('geo', 'position_error')],  # Position error state from geolocation
+    [Output('upload-status', 'children'),
+     Output('too-far-modal', 'is_open')],
+    [Input('upload-image', 'contents'),
+     Input('geo', 'local_date'),
+     Input('section-search-dropdown', 'value')],
+    [State('geo', 'position'),
+     State('geo', 'position_error'),
+     State('mytrail-search-dropdown', 'value')],
     prevent_initial_call=True
 )
-def handle_upload(contents, local_date, position, position_error):
+def handle_upload(contents, local_date, section_value, position, position_error, selected_trail):
     if contents is None:
-        # If no image is uploaded, do nothing
-        return ""
+        return "", False
     if position_error:
-        # Handle case where geolocation failed
-        return "Failed to get geolocation data."
-    content_type, content_string = contents[0].split(',')  # Taking the first uploaded file
-    image_bytes = content_string  # base64 encoded string of the first image
-    latitude = position['lat']
-    longitude = position['lon']
+        return "Failed to get geolocation data.", False
+    content_type, content_string = contents[0].split(',')
     decoded = base64.b64decode(content_string)
+
+    if not selected_trail:
+        return "Please select a trail.", False
+
+    gpx_path = os.path.join('data/trails', f'{selected_trail}.gpx')
+    trail_points = gpx_to_points(gpx_path).coords
+
+    # Check if user is within a reasonable distance of the trail
+    if position and is_within_distance((position['lat'], position['lon']), trail_points):
+        latitude = position['lat']
+        longitude = position['lon']
+        is_far = False
+    else:
+        # If no section is selected, prompt the user to select a section
+        if not section_value:
+            return "You're too far from the trail. Please select a section.", True
+
+        # Determine approximate location based on section selected
+        if section_value == 'Towards the beginning':
+            approximate_point = int(len(trail_points) * 1/3)
+        elif section_value == 'Somewhere in the middle of the trail':
+            approximate_point = int(len(trail_points) * 1/2)
+        elif section_value == 'Only at the end':
+            approximate_point = int(len(trail_points) * 2/3)
+        else:
+            return "Please select the approximate section of the trail.", False
+
+        latitude, longitude = trail_points[approximate_point]
+        is_far = False
+
     try:
         detected_labels = detect_labels(decoded)
         labels = [l.description.lower() for l in detected_labels]
-        if len(set(labels).intersection(set(get_unique_species(df_trails)))):
-            species = list(set(labels).intersection(set(get_unique_species(df_trails))))[0].capitalize()
+        unique_species = get_unique_species(df_trails)
+        if len(set(labels).intersection(set(unique_species))):
+            species = list(set(labels).intersection(set(unique_species)))[0].capitalize()
         else:
             species = detected_labels[0].description
     except:
-        return "There was a problem in your image, try again"
+        return "There was a problem with your image, try again.", False
+
     try:
         session = Session()
-        # Attempt to fetch data within a transaction
-        # session.begin()  # Start a new transaction
         last_row = session.query(Uploads).order_by(Uploads.upload_id.desc()).first()
-        last_row_id = last_row.upload_id
+        last_row_id = last_row.upload_id if last_row else 0
         new_upload = Uploads(
-            upload_id=last_row_id+1,
+            upload_id=last_row_id + 1,
             upload_lat=latitude,
             upload_long=longitude,
             upload_time=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
@@ -423,13 +494,105 @@ def handle_upload(contents, local_date, position, position_error):
         session.commit()
         session.close()
     except SQLAlchemyError as e:
-        session = Session()
-        session.rollback()  # Roll back the transaction if an error occurs
+        session.rollback()
         session.close()
-        # print("Error fetching data from the database: ", e)
-        return "There was a problem in your image, try again"
+        return "There was a problem with your image, try again.", False
 
-    return "Image uploaded successfully!"
+    return "Image uploaded successfully!", False
+
+# Add a callback to close the modal
+# @callback(
+#     Output('too-far-modal', 'is_open'),
+#     [Input('close-select-section-modal', 'n_clicks')],
+#     [State('too-far-modal', 'is_open')]
+# )
+# def close_select_section_modal(n_clicks, is_open):
+#     if n_clicks:
+#         return not is_open
+#     return is_open
+
+# @callback(
+#     # Output('upload-status', 'children'),  # An Output to indicate the upload status
+#     # [Input('upload-image', 'contents'),  # Contents from the upload component
+#     #  Input('geo', 'local_date')],  # Date from the geolocation component
+#     # [State('geo', 'position'),  # Position state from geolocation
+#     #  State('geo', 'position_error')],  # Position error state from geolocation
+#     # prevent_initial_call=True
+#     Output('upload-status', 'children'),
+#     [Input('upload-image', 'contents'),
+#      Input('geo', 'local_date'),
+#      Input('section-search-dropdown', 'value')],
+#     [State('geo', 'position'),
+#      State('geo', 'position_error'),
+#      State('mytrail-search-dropdown', 'value')],
+#     prevent_initial_call=True
+# )
+# def handle_upload(contents, local_date, section_value, position, position_error, selected_trail):
+#     if contents is None:
+#         # If no image is uploaded, do nothing
+#         return ""
+#     if position_error:
+#         # Handle case where geolocation failed
+#         return "Failed to get geolocation data."
+#     content_type, content_string = contents[0].split(',')  # Taking the first uploaded file
+#     image_bytes = content_string  # base64 encoded string of the first image
+#     # latitude = position['lat']
+#     # longitude = position['lon']
+#         # Check if user is within a reasonable distance of the trail
+    
+#     gpx_path = os.path.join('data/trails', f'{selected_trail}.gpx')
+#     trail_points = gpx_to_points(gpx_path).coords
+    
+#     if position and is_within_distance((position['lat'], position['lon']), trail_points):
+#         latitude = position['lat']
+#         longitude = position['lon']
+#     else:
+#         # Determine approximate location based on section selected
+#         if section_value == 'Towards the beginning':
+#             approximate_point = int(len(trail_points) * 1/3)
+#         elif section_value == 'Somewhere in the middle of the trail':
+#             approximate_point = int(len(trail_points) * 1/2)
+#         elif section_value == 'Only at the end':
+#             approximate_point = int(len(trail_points) * 2/3)
+#         else:
+#             return "Please select the approximate section of the trail."
+#         latitude, longitude = trail_points[approximate_point]
+        
+#     decoded = base64.b64decode(content_string)
+#     try:
+#         detected_labels = detect_labels(decoded)
+#         labels = [l.description.lower() for l in detected_labels]
+#         if len(set(labels).intersection(set(get_unique_species(df_trails)))):
+#             species = list(set(labels).intersection(set(get_unique_species(df_trails))))[0].capitalize()
+#         else:
+#             species = detected_labels[0].description
+#     except:
+#         return "There was a problem in your image, try again"
+#     try:
+#         session = Session()
+#         # Attempt to fetch data within a transaction
+#         # session.begin()  # Start a new transaction
+#         last_row = session.query(Uploads).order_by(Uploads.upload_id.desc()).first()
+#         last_row_id = last_row.upload_id
+#         new_upload = Uploads(
+#             upload_id=last_row_id+1,
+#             upload_lat=latitude,
+#             upload_long=longitude,
+#             upload_time=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+#             upload_img=decoded,
+#             upload_species=species
+#         )
+#         session.add(new_upload)
+#         session.commit()
+#         session.close()
+#     except SQLAlchemyError as e:
+#         session = Session()
+#         session.rollback()  # Roll back the transaction if an error occurs
+#         session.close()
+#         # print("Error fetching data from the database: ", e)
+#         return "There was a problem in your image, try again"
+
+#     return "Image uploaded successfully!"
 
 
 @callback(
@@ -440,15 +603,17 @@ def handle_upload(contents, local_date, position, position_error):
     [State('mytrail-map', 'zoom')]
 )
 def display_image_marker(contents, trail, user_position, zoom):
+    # print(user_position)
     if not trail:
         return []
 
     markers = []
-    print('no marker ',markers)
     if user_position:
+        # print('entered here in user')
         user_marker = dl.Marker(
             position=(user_position['lat'], user_position['lon']),
             icon={"iconUrl": 'assets/hiker.png', "iconSize": [zoom * 4, zoom * 4]},
+            # icon={"iconUrl": html.I(className="fas fa-clock"), "iconSize": [zoom * 4, zoom * 4]},
             children=[
                 dl.Tooltip("You are here"),
                 dl.Popup(f"Your location: Latitude {user_position['lat']}, Longitude {user_position['lon']}")
@@ -463,46 +628,45 @@ def display_image_marker(contents, trail, user_position, zoom):
     markers.extend([start_marker, end_marker])
 
     # Fetch upload data with retry logic
-    uploads = fetch_data(Uploads)
-    if uploads:
-        for upload in uploads:
-            if is_within_distance((upload.upload_lat, upload.upload_long), trail_points):
-                image_url = db_img(upload.upload_img)
-                species_marker = dl.Marker(
-                    position=(upload.upload_lat, upload.upload_long),
-                    children=[dl.Tooltip(children=[html.Img(src=image_url, style={'width': '100px', 'height': 'auto'}), html.P(""), upload.upload_species])],
-                    icon={"iconUrl": 'assets/species.png', "iconSize": [zoom * 7, zoom * 5]})
-                markers.append(species_marker)
+    # uploads = fetch_data(Uploads)
+    # if uploads:
+    #     for upload in uploads:
+    #         if is_within_distance((upload.upload_lat, upload.upload_long), trail_points):
+    #             image_url = db_img(upload.upload_img)
+    #             species_marker = dl.Marker(
+    #                 position=(upload.upload_lat, upload.upload_long),
+    #                 children=[dl.Tooltip(children=[html.Img(src=image_url, style={'width': '100px', 'height': 'auto'}), html.P(""), upload.upload_species])],
+    #                 icon={"iconUrl": 'assets/species.png', "iconSize": [zoom * 7, zoom * 5]})
+    #             markers.append(species_marker)
 
     print(f"Total markers for trail '{trail}': {len(markers)}")
     return markers
 
 @callback(
-    # [Output('mytrail-layer', 'children'), Output('mytrail-map', 'center'), Output('mytrail-map', 'zoom')],
-    [Output('mytrail-layer', 'children'), Output('mytrail-map', 'center')],
+    [Output('mytrail-layer', 'children'), Output("mytrail-map", "viewport")],
     [Input('mytrail-search-dropdown', 'value')]
 )
 def update_map(trail_name):
     if not trail_name:
         print('in no trail')
-        # return [], dash.no_update, dash.no_update
         return [], dash.no_update
+
+    # Load the GPX data
     gpx_path = os.path.join('data/trails', f'{trail_name}.gpx')
     line_string = gpx_to_points(gpx_path)
     centroid = line_string.centroid.coords[0]
     positions = list(line_string.coords)
     features = [dl.Polyline(positions=positions, color='blue')]
-    # Calculate the bounds
+
+    # Calculate the bounds for zoom estimation
     min_lat = min(point[1] for point in positions)
     max_lat = max(point[1] for point in positions)
     min_lon = min(point[0] for point in positions)
     max_lon = max(point[0] for point in positions)
-    # Determine padding
-    # lat_padding = (max_lat - min_lat) * 0.1  # 10% padding
-    # lon_padding = (max_lon - min_lon) * 0.1
-    # # Apply padding
-    # bounds = [(min_lat - lat_padding, min_lon - lon_padding), (max_lat + lat_padding, max_lon + lon_padding)]
+    bounds = [[min_lat, min_lon], [max_lat, max_lon]]
+
+    # Estimate zoom level based on bounds
     estimated_zoom = estimate_zoom(min_lat, max_lat, min_lon, max_lon)
-    print(centroid)
-    # return features, centroid, estimated_zoom
-    return features, centroid
+    # print(f"Center: {centroid}, Estimated Zoom: {estimated_zoom}")
+
+    return features, dict(center=centroid, zoom=estimated_zoom, transition="flyTo")
