@@ -16,6 +16,7 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from math import *
 import time
+import requests
 
 from database import get_session, Trails, Uploads
 
@@ -63,19 +64,55 @@ os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'assets/lifeonland-418914-00a1094
 #         )
 #     return labels
 
-
-def detect_labels(content):
-    import openai
-    openai.api_key = "YOUR_API_KEY"
-    # image_base64 = encode_image_to_base64(
-    # 'path/to/koala_image.jpg'
-    # )
-    response = openai.ChatCompletion.create(model="gpt-4-turbo", 
-                                            messages=[{"role":"user", "content": "What's the species in this image? Is it an endangered or threatened species? Can you provide a description?"}, 
-                                                        {"role":"system", "content": {"type":"image_base64", "image_base64": content}}     
-                                            ])
-    print(response)
-    return response['choices'][0]['message']['content']
+text = '''
+Based on the image I am giving you, tell me three of the following things based on the main species identified in the image.
+1. Vernacular name of the species
+2. if it is endangered, vulnerable, critically endangered return “Endangered”. If it is venomous, poisonous or dangerous return “Dangerous”. If it is neither of the above return “Normal”
+3. description of the species in under 1000 characters.
+I want you to return each of the questions separated by “|”
+An example:
+Koala | Endangered | The Koala is a marsupial native to Australia. They primarily feed on eucalyptus leaves and are known for their distinctive large nose, fluffy ears, and thick fur. Habitat destruction and disease are significant threats to their population.
+If no species is identified just respond with "None"
+'''
+def encode_image_to_base64(image_bytes):
+    return base64.b64encode(image_bytes).decode('utf-8')
+def detect_labels(image_bytes):
+    api_key = "sk-proj-YBWxMoXBkkcVk2Qz1p3yT3BlbkFJdobay4XZHCDQE8BpSp5S "   
+    # Encode the image content to base64
+    image_base64 = encode_image_to_base64(image_bytes)
+    headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {api_key}"
+    }
+    # Send the image as part of a text message
+    payload = {
+        'model': "gpt-4-turbo",
+        'messages': [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        'type': 'text',
+                        'text':  text
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/png;base64,{image_base64}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 300
+    }
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    response_data = response.json()  
+   
+    if 'choices' in response_data and len(response_data['choices']) > 0:
+        return response_data['choices'][0]['message']['content']
+    else:
+        return "None"
 
 
 def get_unique_species(df):
@@ -305,11 +342,6 @@ layout = dbc.Container(fluid=True, children=[
             dbc.Button("Close", id="close-too-far-modal", className="ms-auto", n_clicks=0)
         )
     ], id="too-far-modal", is_open=False),
-    # dcc.Interval(
-    #     id='interval-component',
-    #     interval=2*1000,  # in milliseconds, e.g., 5*1000 for 5 seconds
-    #     n_intervals=0
-    # )
 ])
 
 
@@ -468,13 +500,19 @@ def handle_upload(contents, local_date, section_value, position, position_error,
         is_far = False
 
     try:
-        detected_labels = detect_labels(decoded)
-        labels = [l.description.lower() for l in detected_labels]
-        unique_species = get_unique_species(df_trails)
-        if len(set(labels).intersection(set(unique_species))):
-            species = list(set(labels).intersection(set(unique_species)))[0].capitalize()
+        output_text = detect_labels(decoded)
+        if output_text == 'None':
+            return "There was a problem with your image, try again.", False
         else:
-            species = detected_labels[0].description
+            species_name = output_text.split('|')[0].strip()
+            species_identity = output_text.split('|')[1].strip()
+            species_desc = output_text.split('|')[-1].strip()
+        # labels = [l.description.lower() for l in detected_labels]
+        # unique_species = get_unique_species(df_trails)
+        # if len(set(labels).intersection(set(unique_species))):
+        #     species = list(set(labels).intersection(set(unique_species)))[0].capitalize()
+        # else:
+        #     species = detected_labels[0].description
     except:
         return "There was a problem with your image, try again.", False
 
@@ -488,7 +526,9 @@ def handle_upload(contents, local_date, section_value, position, position_error,
             upload_long=longitude,
             upload_time=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             upload_img=decoded,
-            upload_species=species
+            upload_species=species_name,
+            upload_identity=species_identity,
+            upload_desc=species_desc
         )
         session.add(new_upload)
         session.commit()
@@ -628,16 +668,38 @@ def display_image_marker(contents, trail, user_position, zoom):
     markers.extend([start_marker, end_marker])
 
     # Fetch upload data with retry logic
-    # uploads = fetch_data(Uploads)
-    # if uploads:
-    #     for upload in uploads:
-    #         if is_within_distance((upload.upload_lat, upload.upload_long), trail_points):
-    #             image_url = db_img(upload.upload_img)
-    #             species_marker = dl.Marker(
-    #                 position=(upload.upload_lat, upload.upload_long),
-    #                 children=[dl.Tooltip(children=[html.Img(src=image_url, style={'width': '100px', 'height': 'auto'}), html.P(""), upload.upload_species])],
-    #                 icon={"iconUrl": 'assets/species.png', "iconSize": [zoom * 7, zoom * 5]})
-    #             markers.append(species_marker)
+    uploads = fetch_data(Uploads)
+    if uploads:
+        for upload in uploads:
+            if is_within_distance((upload.upload_lat, upload.upload_long), trail_points):
+                image_url = db_img(upload.upload_img)
+                if upload.upload_identity == 'Dangerous':
+                    species_marker = dl.Marker(
+                        position=(upload.upload_lat, upload.upload_long),
+                        children=[dl.Tooltip(children=
+                                             [html.Img(src=image_url, style={'width': '100px', 'height': 'auto'}), html.P(""), 
+                                              upload.upload_species, html.P(""),
+                                              upload.upload_identity])],
+                        icon={"iconUrl": 'assets/dangerous_species.png', "iconSize": [zoom * 7, zoom * 5]})
+                    markers.append(species_marker)
+                elif upload.upload_identity == 'Endangered':
+                    species_marker = dl.Marker(
+                        position=(upload.upload_lat, upload.upload_long),
+                        children=[dl.Tooltip(children=
+                                             [html.Img(src=image_url, style={'width': '100px', 'height': 'auto'}), html.P(""), 
+                                              upload.upload_species, html.P(""),
+                                              upload.upload_identity])],
+                        icon={"iconUrl": 'assets/endangered_species.png', "iconSize": [zoom * 7, zoom * 5]})
+                    markers.append(species_marker)
+                elif upload.upload_identity == 'Safe':
+                    species_marker = dl.Marker(
+                        position=(upload.upload_lat, upload.upload_long),
+                        children=[dl.Tooltip(children=
+                                             [html.Img(src=image_url, style={'width': '100px', 'height': 'auto'}), html.P(""), 
+                                              upload.upload_species, html.P(""),
+                                              upload.upload_identity])],
+                        icon={"iconUrl": 'assets/safe_species.png', "iconSize": [zoom * 7, zoom * 5]})
+                    markers.append(species_marker)
 
     print(f"Total markers for trail '{trail}': {len(markers)}")
     return markers
@@ -648,7 +710,6 @@ def display_image_marker(contents, trail, user_position, zoom):
 )
 def update_map(trail_name):
     if not trail_name:
-        print('in no trail')
         return [], dash.no_update
 
     # Load the GPX data
