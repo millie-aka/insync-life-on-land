@@ -5,6 +5,7 @@ from dash import dcc, html, Input, Output, State, ClientsideFunction, callback, 
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
+from dash import callback_context
 
 import xml.etree.ElementTree as ET
 from shapely.geometry import LineString, Point
@@ -342,6 +343,23 @@ layout = dbc.Container(fluid=True, children=[
             dbc.Button("Close", id="close-too-far-modal", className="ms-auto", n_clicks=0)
         )
     ], id="too-far-modal", is_open=False),
+    dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Congratulations on your find!")),
+        dbc.ModalBody([
+            html.Img(id="uploaded-image", style={'width': '100%', 'height': 'auto'}),
+            html.H4(id="uploaded-species-name", className='mt-2'),
+            html.H5(id='uploaded-species-identity'),
+            html.P(id="uploaded-species-description")
+        ]),
+        dbc.ModalFooter(
+            dbc.Button("Close", id="close-img-modal", className="ms-auto", n_clicks=0, style={'text-decoration': 'none', 'padding': '5px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px'})
+        )
+    ], id="uploaded-img-modal", is_open=False),
+    dcc.Interval(
+        id='interval-component',
+        interval=2*1000,  # in milliseconds, e.g., 5*1000 for 5 seconds
+        n_intervals=0
+    )
 ])
 
 
@@ -450,28 +468,48 @@ def show_upload_options(position, trail_name):
         return {'display':'block', 'margin':'10%'}
     else:
         return {'display': 'none'}
-        
+
+# @callback(
+#     Output('uploaded-img-modal', 'is_open'),
+#     [Input('close-img-modal', 'n_clicks')],
+#     [State('uploaded-img-modal', 'is_open')]
+# )
+# def close_uploaded_img_modal(n_clicks, is_open):
+#     if n_clicks:
+#         return False
+#     return is_open
+  
 @callback(
     [Output('upload-status', 'children'),
-     Output('too-far-modal', 'is_open')],
+     Output('uploaded-img-modal', 'is_open'),
+     Output('uploaded-image', 'src'),
+     Output('uploaded-species-name', 'children'),
+     Output('uploaded-species-identity', 'children'),
+     Output('uploaded-species-description', 'children')],
     [Input('upload-image', 'contents'),
      Input('geo', 'local_date'),
-     Input('section-search-dropdown', 'value')],
+     Input('section-search-dropdown', 'value'),
+     Input('close-img-modal', 'n_clicks')],
     [State('geo', 'position'),
      State('geo', 'position_error'),
-     State('mytrail-search-dropdown', 'value')],
+     State('mytrail-search-dropdown', 'value'),
+     State('uploaded-img-modal', 'is_open')],
     prevent_initial_call=True
 )
-def handle_upload(contents, local_date, section_value, position, position_error, selected_trail):
+def handle_image_and_modal(contents, local_date, section_value, close_n_clicks, position, position_error, selected_trail, modal_is_open):
+    triggered_id = callback_context.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_id == 'close-img-modal':
+        return dash.no_update, False, dash.no_update, dash.no_update, dash.no_update, dash.no_update
     if contents is None:
-        return "", False
+        return "", False, None, None, None, None
     if position_error:
-        return "Failed to get geolocation data.", False
+        return "Failed to get geolocation data.", False, None, None, None, None
     content_type, content_string = contents[0].split(',')
     decoded = base64.b64decode(content_string)
 
     if not selected_trail:
-        return "Please select a trail.", False
+        return "Please select a trail.", False, None, None, None, None
 
     gpx_path = os.path.join('data/trails', f'{selected_trail}.gpx')
     trail_points = gpx_to_points(gpx_path).coords
@@ -484,7 +522,7 @@ def handle_upload(contents, local_date, section_value, position, position_error,
     else:
         # If no section is selected, prompt the user to select a section
         if not section_value:
-            return "You're too far from the trail. Please select a section.", True
+            return "You're too far from the trail. Please select a section.", False, None, None, None, None
 
         # Determine approximate location based on section selected
         if section_value == 'Towards the beginning':
@@ -494,7 +532,7 @@ def handle_upload(contents, local_date, section_value, position, position_error,
         elif section_value == 'Only at the end':
             approximate_point = int(len(trail_points) * 2/3)
         else:
-            return "Please select the approximate section of the trail.", False
+            return "Please select the approximate section of the trail.", False, None, None, None, None
 
         latitude, longitude = trail_points[approximate_point]
         is_far = False
@@ -502,19 +540,13 @@ def handle_upload(contents, local_date, section_value, position, position_error,
     try:
         output_text = detect_labels(decoded)
         if output_text == 'None':
-            return "There was a problem with your image, try again.", False
+            return "There was a problem with your image, try again.", True, None, 'There was a problem with the image, please try again!', None, None
         else:
             species_name = output_text.split('|')[0].strip()
             species_identity = output_text.split('|')[1].strip()
             species_desc = output_text.split('|')[-1].strip()
-        # labels = [l.description.lower() for l in detected_labels]
-        # unique_species = get_unique_species(df_trails)
-        # if len(set(labels).intersection(set(unique_species))):
-        #     species = list(set(labels).intersection(set(unique_species)))[0].capitalize()
-        # else:
-        #     species = detected_labels[0].description
     except:
-        return "There was a problem with your image, try again.", False
+        return "There was a problem with your image, try again.", True, None, 'There was a problem with the image, please try again!', None, None
 
     try:
         session = Session()
@@ -536,9 +568,9 @@ def handle_upload(contents, local_date, section_value, position, position_error,
     except SQLAlchemyError as e:
         session.rollback()
         session.close()
-        return "There was a problem with your image, try again.", False
+        return "There was a problem with your image, try again.", True, None, 'There was a problem with the image, please try again!', None, None
 
-    return "Image uploaded successfully!", False
+    return "Image uploaded successfully!", True, contents[0], species_name, species_identity, species_desc
 
 # Add a callback to close the modal
 # @callback(
@@ -639,10 +671,11 @@ def handle_upload(contents, local_date, section_value, position, position_error,
     Output('myimage-layer', 'children'),
     [Input('upload-image', 'contents'),
      Input('mytrail-search-dropdown', 'value'),
-     Input('geo', 'position')],
+     Input('geo', 'position'),
+     Input('interval-component', 'n_intervals')],
     [State('mytrail-map', 'zoom')]
 )
-def display_image_marker(contents, trail, user_position, zoom):
+def display_image_marker(contents, trail, user_position, n, zoom):
     # print(user_position)
     if not trail:
         return []
