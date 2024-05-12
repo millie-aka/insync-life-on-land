@@ -60,7 +60,9 @@ def filter_trails(selected_species, difficulty, duration, distance):
     # If no trails are found, relax to filtering by all selected species
     if selected_species:
         
+        print("debug formatted_selected_species:", formatted_selected_species)
         species_filter = df['trail_species'].apply(lambda x: all(species in x for species in formatted_selected_species))
+        
 
         # Use the combined filter to select rows from the DataFrame
         species_filtered = df[species_filter]
@@ -70,10 +72,14 @@ def filter_trails(selected_species, difficulty, duration, distance):
             return species_filtered, True  # Return True indicating some relaxation was needed
  
     # If still no trails, relax further to any one of the selected species
-    for species in formatted_selected_species:
-        single_species_filtered = df[df['trail_species'].str.contains(species, case=False, na=False)]
-        if not single_species_filtered.empty:
-            return single_species_filtered, True  # True to indicate relaxation to single species
+    
+    print("debug : COMPLETE RELAXATION")
+    
+    single_species_filtered = df['trail_species'].apply(lambda x: any(species in x for species in formatted_selected_species))
+    species_filtered = df[single_species_filtered]
+    print("single_species_filtered:", single_species_filtered)
+    if not single_species_filtered.empty:
+        return species_filtered, True  # True to indicate relaxation to single species
  
     return pd.DataFrame(), True
  
@@ -89,7 +95,14 @@ def build_trail_card(trail, selected_species):
     time_mel = trail['trail_time_mel']
     loop = trail['trail_loop']
     species = trail['trail_species'].split(", ")
+
+    #print("----------------------------------------")
+    #print("debug: trail_name", trail_name)
+    #print("debug: species:", species)
+
     selected_species = [s.replace('_', ' ') for s in selected_species]
+
+    #print("debug:selected_species", selected_species)
 
     looped = ''
     if loop == 'one way':
@@ -97,7 +110,9 @@ def build_trail_card(trail, selected_species):
     elif loop == 'closed loop':
         looped = 'Yes'
 
-    trail_card_species = [s for s in selected_species if s in species]    
+    trail_card_species = [s for s in species if any(selected_species_name.lower() in s.lower() for selected_species_name in selected_species)]
+
+    #print("debug trail_card_species:", trail_card_species)   
     trail_card_species_str = ", ".join(trail_card_species)   
 
     trail_card = dbc.Row([
@@ -114,7 +129,7 @@ def build_trail_card(trail, selected_species):
                 dbc.Col([
 
                     html.I(
-                        className="fas fa-clock", style={'color': '#808080', 'margin-right': '5px', 'margin-top': '20px', 'margin-left': '30px'}),
+                        className="fas fa-paw", style={'color': '#808080', 'margin-right': '5px', 'margin-top': '20px', 'margin-left': '30px'}),
                     html.Span(f"Species to spot in this trail: {trail_card_species_str}", style={'color': '#808080', 'font-weight': 'bold'}),
                     html.Div(""),
                     # Mountain icon
@@ -353,7 +368,6 @@ def display_results(n_clicks, selected_species, selected_difficulty, selected_du
     if filtered_trails.empty:
         return [], "Can't find matches for your preferences, retake the quiz & adjust them!"
  
-    
     
     cards = [build_trail_card(trail, selected_species) for index, trail in filtered_trails.iterrows()]
     match_message = "Trails based on your preferences" if not was_relaxed else "Can't find matches for your preferences, but we think you should check this out!"
