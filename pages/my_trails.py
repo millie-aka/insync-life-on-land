@@ -225,7 +225,10 @@ layout = dbc.Container(fluid=True, children=[
                                 'borderWidth': '2px',
                                 'borderColor': '#D9D9D9'
                             }
-                        )
+                        ),
+                        dcc.Link(html.Button("Don't know which trail? Let us recommend one to you", n_clicks=0, style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'30px', 'margin-left': '26%',}), 
+                                 href="/explore-species", refresh=True),
+            
                     ])
                 ], width=9)
             ]),
