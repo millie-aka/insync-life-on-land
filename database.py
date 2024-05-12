@@ -7,11 +7,11 @@ Base = declarative_base()
 
 connection = engine.connect()
 Session = sessionmaker(bind=engine)
-session = Session()
+# session = Session()
 
 def get_session():
     # Session = sessionmaker(bind=engine)
-    return session, connection
+    return Session, connection
 
 class Trails(Base):
     __tablename__ = 'trails'
@@ -33,12 +33,5 @@ class Uploads(Base):
     upload_time = db.Column(db.String(50))
     upload_img = db.Column(db.BLOB)
     upload_species = db.Column(db.String(100))
-    
-    
-    
-
-
-
-# connection = engine.connect()
-# trails = pd.read_sql('SELECT * FROM trails', con=connection)
-# uploads = pd.read_sql('SELECT * FROM uploads', con=connection)
+    upload_identity = db.Column(db.String(50))
+    upload_desc = db.Column(db.String(5000))
