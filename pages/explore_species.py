@@ -96,13 +96,13 @@ def build_trail_card(trail, selected_species):
     loop = trail['trail_loop']
     species = trail['trail_species'].split(", ")
 
-    #print("----------------------------------------")
-    #print("debug: trail_name", trail_name)
-    #print("debug: species:", species)
+    print("----------------------------------------")
+    print("debug: trail_name", trail_name)
+    print("debug: species:", species)
 
     selected_species = [s.replace('_', ' ') for s in selected_species]
 
-    #print("debug:selected_species", selected_species)
+    print("debug:selected_species", selected_species)
 
     looped = ''
     if loop == 'one way':
@@ -112,7 +112,7 @@ def build_trail_card(trail, selected_species):
 
     trail_card_species = [s for s in species if any(selected_species_name.lower() in s.lower() for selected_species_name in selected_species)]
 
-    #print("debug trail_card_species:", trail_card_species)   
+    print("debug trail_card_species:", trail_card_species)   
     trail_card_species_str = ", ".join(trail_card_species)   
 
     trail_card = dbc.Row([
@@ -367,9 +367,23 @@ def display_results(n_clicks, selected_species, selected_difficulty, selected_du
     #print("debug filtered_trails:", filtered_trails)
     if filtered_trails.empty:
         return [], "Can't find matches for your preferences, retake the quiz & adjust them!"
- 
     
     cards = [build_trail_card(trail, selected_species) for index, trail in filtered_trails.iterrows()]
     match_message = "Trails based on your preferences" if not was_relaxed else "Can't find matches for your preferences, but we think you should check this out!"
-    return cards, match_message
- 
+
+    '''
+    button_row = dbc.Row([
+        dbc.Col(dbc.Button("Start the trail that intruiged you", href="/my-trails", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto"),
+        dbc.Col(dbc.Button("View other events you can participate in",  href="/events", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto")
+    ], justify="center", className="my-4"),    
+
+    result_div = html.Div([match_message, html.Br(), button_row])
+    '''
+        # Create buttons
+    button_go_to_my_trails = dbc.Col(dbc.Button("Start the trail that intruiged you", href="/my-trails", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto")
+    button_see_events = dbc.Col(dbc.Button("View other events you can participate in",  href="/events", color="primary", className="d-block mx-auto", style={'text-decoration': 'none', 'padding': '6px 15px', 'background': '#545646', 'color': '#F9F1E8', 'border-radius': '20px', 'margin-top':'0%'}), width="auto")
+    
+    # Arrange buttons and message in a div
+    result_div = html.Div([match_message, html.Br(), button_go_to_my_trails, button_see_events])
+
+    return cards, result_div
