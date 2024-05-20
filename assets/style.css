@@ -1,0 +1,185 @@
+@import url('https:fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    overflow-x: hidden;
+    background: #F9F1E8;
+    min-height: 100vh;
+    margin-top:10px;
+}
+
+header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 5%;  /* Use percentage for responsive padding */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+
+.logo {
+    color: #545646;
+    font-weight: 700;
+    font-size: 2vw;
+    text-decoration: none;
+}
+
+.navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2vw; /* Use viewport width for responsive gap */
+}
+
+.navigation li {
+    list-style: none;
+    font-size: 1.2vw;
+}
+
+.navigation li a {
+    text-decoration: none;
+    padding: 6px 15px;
+    color: #545646;
+    border-radius: 20px;
+}
+
+.navigation li a:hover,
+.navigation li a.active {
+    background: #545646;
+    color: #F9F1E8;
+}
+
+.parallax {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.parallax img {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+   
+    pointer-events: none;
+}
+#text
+{
+    position: absolute;
+    text-align: center;
+    top: 20%;
+    /* right:200px; */
+    transform: translateY(-50%);
+    font-size:3.9em;
+    color:#545646;
+    max-width: 80%;
+}
+#text2
+{
+    position: absolute;
+    top: 40%;
+    right:240px;
+    text-align: center;
+    max-width: 60%;
+   
+    font-size:2.3em;
+    color:#47483c;
+}
+.sec
+{
+    position: relative;
+    padding: 100px;
+    background: #112434;
+}
+.sec h2
+{
+    font-size: 3em;
+    color:#fff;
+    margin-bottom: 10px;
+}
+.sec p
+{
+    font-size: 1em;
+    color:#fff;
+    font-weight: 300;
+}
+.sec input[type=text] {
+    position: absolute;
+    /* float:right; */
+    left:620px;
+    width:400px;
+    padding: 12px;
+    border: none;
+    margin-top: 0px;
+    margin-right: 16px;
+    font-size: 17px;
+    border-radius: 30px;
+   
+  }
+.circle {
+    position: relative;
+    width: 20%;
+    display: inline-block;
+    cursor: pointer;
+    transition: filter 0.3s;
+}
+
+.circle img {
+    width: 100%;
+    height: auto;
+    transition: filter 0.3s;
+}
+
+.circle:hover img {
+    filter: blur(3px);
+}
+
+.default-text {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 2em;
+    color: #F9F1E8;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.hover-text {
+    display: none; /* Initially hidden */
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 1.2em;
+    color: #F9F1E8;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.circle:hover .default-text {
+    display: none; /* Hide default text on hover */
+}
+
+.circle:hover .hover-text {
+    display: block; /* Show hover text on hover */
+}
+
+/* assets/style.css */
+
+.carousel-caption p { /* Add a semi-transparent background to captions */
+    color: #545646;
+    text-align: center;
+}
+
+.carousel-header p { /* Add a semi-transparent background to captions */
+    color: #47483c !important;
+    text-align: left !important;
+    font-size: 1em !important;
+}
